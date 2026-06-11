@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <radialGradient id="glow1" cx="25%" cy="60%" r="55%">
+      <stop offset="0%" stop-color="#c0392b"/>
+      <stop offset="100%" stop-color="#0d1117" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#1a1a6e"/>
+      <stop offset="100%" stop-color="#0d1117" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="60%" cy="80%" r="40%">
+      <stop offset="0%" stop-color="#7a1010"/>
+      <stop offset="100%" stop-color="#0d1117" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Base -->
+  <rect width="900" height="450" fill="#0d1117"/>
+
+  <!-- Gradient layers -->
+  <rect width="900" height="450" fill="url(#glow1)"/>
+  <rect width="900" height="450" fill="url(#glow2)"/>
+  <rect width="900" height="450" fill="url(#glow3)"/>
+
+  <!-- Main phrase -->
+  <text x="450" y="230" text-anchor="middle" fill="#ffffff" font-size="68" font-weight="400" letter-spacing="-1" opacity="0.97">memclaw build fleet</text>
+</svg>
