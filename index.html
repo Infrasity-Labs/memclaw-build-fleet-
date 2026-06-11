@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MemClaw Fleet — AI Agent Memory Infrastructure</title>
+  <meta name="description" content="Fleet memory for AI agents. Your agents store what they learn, find what the fleet knows, and get smarter with every interaction.">
+  <meta property="og:title" content="MemClaw Fleet — AI Agent Memory Infrastructure">
+  <meta property="og:description" content="Fleet memory for AI agents. Write, recall, compound — every interaction makes the next one smarter.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "MemClaw Fleet",
+    "description": "Open-source 5-agent pipeline with shared fleet memory via MemClaw",
+    "codeRepository": "https://github.com/caura-ai/caura-memclaw",
+    "license": "https://opensource.org/licenses/MIT",
+    "programmingLanguage": "Python"
+  }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-2: #111111;
+      --bg-3: #1a1a1a;
+      --accent: #ff4d00;
+      --accent-2: #ff8c5a;
+      --text: #f0f0f0;
+      --text-2: #888888;
+      --text-3: #444444;
+      --border: #222222;
+      --success: #00c896;
+      --grid: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2.5rem;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      font-size: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--accent-2); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 8rem 2.5rem 4rem;
+      gap: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255,77,0,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(255,77,0,0.3);
+      padding: 0.35rem 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .highlight {
+      color: var(--accent);
+      display: block;
+    }
+
+    .hero-desc {
+      font-size: 0.95rem;
+      color: var(--text-2);
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      max-width: 480px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 2rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-2);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 2rem;
+      background: transparent;
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-2);
+      color: var(--text);
+    }
+
+    /* HERO VISUAL */
+    .hero-visual {
+      position: relative;
+    }
+
+    .terminal {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .terminal::before {
+      content: '● ● ●';
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--text-3);
+      margin-bottom: 1rem;
+    }
+
+    .terminal-line {
+      font-size: 0.75rem;
+      line-height: 2;
+      color: var(--text-2);
+    }
+
+    .terminal-line .cmd { color: var(--accent); }
+    .terminal-line .str { color: var(--success); }
+    .terminal-line .key { color: #7aa2f7; }
+    .terminal-line .val { color: var(--accent-2); }
+    .terminal-line .comment { color: var(--text-3); }
+
+    .terminal-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--accent);
+      animation: blink 1s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .memory-card {
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      font-size: 0.7rem;
+      width: 220px;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .memory-card-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .memory-card-content { color: var(--text-2); line-height: 1.5; }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat {
+      padding: 2.5rem;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-2);
+      margin-top: 0.5rem;
+    }
+
+    /* PIPELINE */
+    .section {
+      padding: 6rem 2.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.75rem, 3vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--text-2);
+      max-width: 560px;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .pipeline-step {
+      background: var(--bg);
+      padding: 2rem;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .pipeline-step:hover { background: var(--bg-2); }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .step-icon {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-desc {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    .step-tag {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.65rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(255,77,0,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(255,77,0,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* FEATURES */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature {
+      background: var(--bg);
+      padding: 2rem;
+      transition: background 0.2s;
+    }
+
+    .feature:hover { background: var(--bg-2); }
+
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* MEMORY TABLE */
+    .memory-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+
+    .memory-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .memory-table td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-2);
+    }
+
+    .memory-table tr:last-child td { border-bottom: none; }
+    .memory-table tr:hover td { background: var(--bg-2); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-frontend { background: rgba(122,162,247,0.15); color: #7aa2f7; }
+    .badge-perf { background: rgba(255,140,90,0.15); color: var(--accent-2); }
+    .badge-seo { background: rgba(0,200,150,0.15); color: var(--success); }
+    .badge-review { background: rgba(255,77,0,0.15); color: var(--accent); }
+
+    /* CTA */
+    .cta-section {
+      padding: 6rem 2.5rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(255,77,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      font-size: 0.9rem;
+      color: var(--text-2);
+      margin-bottom: 2.5rem;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 2rem 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-3);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; padding-top: 6rem; }
+      .hero-visual { display: none; }
+      .stats { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .pipeline { grid-template-columns: 1fr 1fr; }
+      .features { grid-template-columns: 1fr; }
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .section { padding: 4rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">Mem<span>Claw</span></a>
+    <ul class="nav-links">
+      <li><a href="#pipeline">Pipeline</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#memory">Memory</a></li>
+      <li><a href="#docs">Docs</a></li>
+    </ul>
+    <a href="https://memclaw.net" class="nav-cta">Get Started →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">Live · Fleet Memory Active</div>
+      <h1>
+        Fleet Memory
+        <span class="highlight">That Compounds</span>
+      </h1>
+      <p class="hero-desc">
+        Open-source memory for multi-agent AI fleets. Your agents store what they learn, find what the fleet knows, and get smarter with every interaction — learning from each other instead of repeating mistakes.
+      </p>
+      <div class="hero-actions">
+        <a href="https://memclaw.net" class="btn-primary">Start Free →</a>
+        <a href="https://github.com/caura-ai/caura-memclaw" class="btn-secondary">⬡ GitHub</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="terminal">
+        <div class="terminal-line"><span class="comment"># Install MemClaw skill on all agents</span></div>
+        <div class="terminal-line"><span class="cmd">$</span> openclaw skills install memclaw</div>
+        <div class="terminal-line"><span class="key">Installed</span> <span class="str">memclaw@0.9.31</span></div>
+        <br>
+        <div class="terminal-line"><span class="comment"># Agent writes to shared fleet memory</span></div>
+        <div class="terminal-line"><span class="cmd">→</span> memclaw_write <span class="val">tenant_id</span>=<span class="str">"fleet"</span></div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="val">content</span>=<span class="str">"LCP 1.8s, CSS Grid layout"</span></div>
+        <br>
+        <div class="terminal-line"><span class="comment"># Next agent recalls shared context</span></div>
+        <div class="terminal-line"><span class="cmd">→</span> memclaw_recall <span class="val">query</span>=<span class="str">"performance"</span></div>
+        <div class="terminal-line"><span class="key">Found</span> <span class="str">6 memories</span> across <span class="val">4 agents</span></div>
+        <br>
+        <div class="terminal-line"><span class="cmd">$</span> <span class="terminal-cursor"></span></div>
+      </div>
+
+      <div class="memory-card">
+        <div class="memory-card-label">✓ Memory saved · frontend-agent</div>
+        <div class="memory-card-content">SaaS landing page built with semantic HTML5, CSS Grid, inline critical CSS. LCP target 1.8s.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">9</span>
+      <div class="stat-label">MCP Tools</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">4</span>
+      <div class="stat-label">Agent Fleet</div>
+    </div>
+    <div class="stat">
+      <span class="stat-num">∞</span>
+      <div class="stat-label">Compounds</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <section class="section" id="pipeline">
+    <div class="section-label">// Agent pipeline</div>
+    <h2 class="section-title">One Loop.<br>Four Skills.</h2>
+    <p class="section-desc">Each agent recalls what the previous one wrote before acting. Memory compounds across every interaction.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-num">01</div>
+        <div class="step-icon">⬡</div>
+        <div class="step-title">Frontend Agent</div>
+        <div class="step-desc">Builds semantic HTML5, CSS Grid layouts, inline critical CSS, lazy loaded images. Writes all architecture decisions to fleet memory.</div>
+        <div class="step-tag">memclaw_write</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">02</div>
+        <div class="step-icon">⚡</div>
+        <div class="step-title">Performance Agent</div>
+        <div class="step-desc">Recalls frontend decisions, audits Core Web Vitals (LCP/CLS/FID), recommends WebP, caching headers, service workers.</div>
+        <div class="step-tag">memclaw_recall</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">03</div>
+        <div class="step-icon">◎</div>
+        <div class="step-title">SEO Agent</div>
+        <div class="step-desc">Recalls all fleet memories, audits title tags, meta descriptions, schema.org markup, Open Graph tags, internal linking.</div>
+        <div class="step-tag">memclaw_recall</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">04</div>
+        <div class="step-icon">✓</div>
+        <div class="step-title">Code Review</div>
+        <div class="step-desc">Recalls ALL fleet memories, reviews holistically across all skills, gives final merge verdict with checklist.</div>
+        <div class="step-tag">memclaw_insights</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEMORY TABLE -->
+  <section class="section" id="memory" style="padding-top: 0;">
+    <div class="section-label">// Live fleet memories</div>
+    <h2 class="section-title">Shared Memory.<br>Real Results.</h2>
+    <p class="section-desc">Every agent writes to the same MemClaw tenant. Every agent reads from it. Nothing is siloed.</p>
+
+    <div style="border: 1px solid var(--border); overflow: hidden;">
+      <table class="memory-table">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Weight</th>
+            <th>Recalls</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-frontend">frontend-agent</span></td>
+            <td>decision</td>
+            <td>SaaS landing page frontend build plan</td>
+            <td>0.95</td>
+            <td>6</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-perf">performance-agent</span></td>
+            <td>decision</td>
+            <td>Core Web Vitals optimization audit</td>
+            <td>0.90</td>
+            <td>4</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-seo">seo-agent</span></td>
+            <td>decision</td>
+            <td>SEO audit — title/meta/robots</td>
+            <td>0.90</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-seo">seo-agent</span></td>
+            <td>decision</td>
+            <td>SEO audit — schema.org + Open Graph</td>
+            <td>0.88</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-review">code-review-agent</span></td>
+            <td>decision</td>
+            <td>Final merge verdict — APPROVED ✓</td>
+            <td>0.95</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-frontend">frontend-agent</span></td>
+            <td>fact</td>
+            <td>Built SaaS landing page with semantic HTML5</td>
+            <td>0.70</td>
+            <td>0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features" style="padding-top:0;">
+    <div class="section-label">// Core capabilities</div>
+    <h2 class="section-title">Everything Agents<br>Need to Remember.</h2>
+    <p class="section-desc">Hybrid search, knowledge graph, contradiction detection — all from a single write.</p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">⬡</div>
+        <div class="feature-title">Hybrid Search</div>
+        <div class="feature-desc">pgvector semantic similarity + full-text keyword matching + knowledge graph expansion. Ranked by similarity, importance, freshness.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">◎</div>
+        <div class="feature-title">Auto-Enrichment</div>
+        <div class="feature-desc">Single-pass LLM enrichment on every write. Auto-classifies into 14 memory types, generates title, summary, tags, importance score.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">∿</div>
+        <div class="feature-title">Karpathy Loop</div>
+        <div class="feature-desc">Agents report success/failure after acting on recalled memories. System reinforces what works, generates preventive rules on failure.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Tenant Isolation</div>
+        <div class="feature-desc">Row-level database separation per tenant. PII auto-detected and quarantined. Every memory stamped with visibility scope at write time.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✓</div>
+        <div class="feature-title">MCP Server</div>
+        <div class="feature-desc">9 tools via Model Context Protocol. Connect Claude Desktop, Claude Code, Cursor, Windsurf, or OpenClaw with a URL and API key.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⊕</div>
+        <div class="feature-title">Knowledge Graph</div>
+        <div class="feature-desc">People, orgs, concepts extracted into entities and relations on every write. Semantic entity resolution auto-merges duplicates at 0.85 cosine.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2>Start Building<br>Your Fleet Memory.</h2>
+    <p>Free tier. No credit card. Up in 2 minutes.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="https://memclaw.net" class="btn-primary">Get Started Free →</a>
+      <a href="https://github.com/caura-ai/caura-memclaw" class="btn-secondary">⬡ Self-Host on GitHub</a>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 Caura · MemClaw is Apache 2.0 licensed</div>
+    <div>Built by a 5-agent OpenClaw fleet · Shared memory via MemClaw</div>
+  </footer>
+
+</body>
+</html>

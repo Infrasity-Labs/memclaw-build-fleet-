@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 500" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">
+
+  <defs>
+    <marker id="arrWrite" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+    </marker>
+    <marker id="arrRecall" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#818cf8"/>
+    </marker>
+    <marker id="arrGray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="500" fill="#0d1117" rx="10"/>
+  <rect width="1100" height="500" fill="none" stroke="#30363d" stroke-width="1.5" rx="10"/>
+
+  <!-- Title -->
+  <text x="550" y="36" text-anchor="middle" fill="#f0f6fc" font-size="17" font-weight="700">MemClaw Fleet - 5-Agent Pipeline</text>
+  <text x="550" y="56" text-anchor="middle" fill="#7d8590" font-size="12">Recall Before Acting · Write After Deciding</text>
+
+  <!-- Shared Memory Bar -->
+  <rect x="30" y="76" width="1040" height="64" rx="6" fill="#1c3d6e" stroke="#2f6dba" stroke-width="1.5"/>
+  <text x="550" y="101" text-anchor="middle" fill="#79b8ff" font-size="13" font-weight="700">MemClaw Shared Fleet Memory</text>
+  <text x="550" y="118" text-anchor="middle" fill="#58a6ff" font-size="11">Hybrid recall: vector + keyword + knowledge graph · memclaw.net/api/v1 · Namespace: fleet_id + tenant_id</text>
+  <text x="550" y="133" text-anchor="middle" fill="#6e7681" font-size="10">Memory types: decision · fact · rule · insight</text>
+
+  <!-- Agent 1: Frontend -->
+  <rect x="30" y="190" width="178" height="240" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <rect x="30" y="190" width="178" height="36" rx="6" fill="#1f4788"/>
+  <rect x="30" y="214" width="178" height="12" fill="#1f4788"/>
+  <text x="119" y="213" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">Frontend Agent</text>
+  <text x="119" y="238" text-anchor="middle" fill="#7d8590" font-size="10">agent_frontend.py</text>
+  <text x="119" y="255" text-anchor="middle" fill="#58a6ff" font-size="10" font-weight="600">WRITE ONLY</text>
+  <line x1="50" y1="264" x2="188" y2="264" stroke="#30363d" stroke-width="1"/>
+  <text x="50" y="280" fill="#8b949e" font-size="10" font-weight="600">Writes:</text>
+  <text x="50" y="296" fill="#e6edf3" font-size="10">· HTML5 semantic structure</text>
+  <text x="50" y="310" fill="#6e7681" font-size="9">  decision · importance 0.95</text>
+  <text x="50" y="325" fill="#e6edf3" font-size="10">· CSS Grid layout strategy</text>
+  <text x="50" y="339" fill="#6e7681" font-size="9">  decision · importance 0.90</text>
+  <text x="50" y="354" fill="#e6edf3" font-size="10">· Critical CSS inlining</text>
+  <text x="50" y="368" fill="#6e7681" font-size="9">  fact · importance 0.70</text>
+  <rect x="50" y="386" width="138" height="22" rx="4" fill="#1c3d6e" stroke="#2f6dba" stroke-width="1"/>
+  <text x="119" y="401" text-anchor="middle" fill="#79b8ff" font-size="10">memclaw_write x3</text>
+
+  <!-- Agent 2: Performance -->
+  <rect x="238" y="190" width="178" height="240" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <rect x="238" y="190" width="178" height="36" rx="6" fill="#145734"/>
+  <rect x="238" y="214" width="178" height="12" fill="#145734"/>
+  <text x="327" y="213" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">Performance Agent</text>
+  <text x="327" y="238" text-anchor="middle" fill="#7d8590" font-size="10">agent_performance.py</text>
+  <text x="327" y="255" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="600">RECALL -&gt; WRITE</text>
+  <line x1="258" y1="264" x2="396" y2="264" stroke="#30363d" stroke-width="1"/>
+  <text x="258" y="280" fill="#8b949e" font-size="10" font-weight="600">Recalls: frontend decisions</text>
+  <text x="258" y="296" fill="#8b949e" font-size="10" font-weight="600">Writes:</text>
+  <text x="258" y="312" fill="#e6edf3" font-size="10">· Bundle &lt; 50 KB, zero ext JS</text>
+  <text x="258" y="326" fill="#6e7681" font-size="9">  rule · importance 0.90</text>
+  <text x="258" y="341" fill="#e6edf3" font-size="10">· Explicit image dimensions</text>
+  <text x="258" y="355" fill="#6e7681" font-size="9">  rule · importance 0.88</text>
+  <text x="258" y="370" fill="#e6edf3" font-size="10">· Lazy loading strategy</text>
+  <text x="258" y="384" fill="#6e7681" font-size="9">  rule · importance 0.85</text>
+  <rect x="258" y="396" width="138" height="22" rx="4" fill="#0d2b1a" stroke="#238636" stroke-width="1"/>
+  <text x="327" y="411" text-anchor="middle" fill="#3fb950" font-size="10">recall x1 · write x1</text>
+
+  <!-- Agent 3: SEO -->
+  <rect x="446" y="190" width="178" height="240" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <rect x="446" y="190" width="178" height="36" rx="6" fill="#3b1f6b"/>
+  <rect x="446" y="214" width="178" height="12" fill="#3b1f6b"/>
+  <text x="535" y="213" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">SEO Agent</text>
+  <text x="535" y="238" text-anchor="middle" fill="#7d8590" font-size="10">agent_seo.py</text>
+  <text x="535" y="255" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="600">RECALL -&gt; WRITE</text>
+  <line x1="466" y1="264" x2="604" y2="264" stroke="#30363d" stroke-width="1"/>
+  <text x="466" y="280" fill="#8b949e" font-size="10" font-weight="600">Recalls: ALL fleet memories</text>
+  <text x="466" y="294" fill="#6e7681" font-size="9">  incl. Performance constraints</text>
+  <text x="466" y="310" fill="#8b949e" font-size="10" font-weight="600">Writes:</text>
+  <text x="466" y="326" fill="#e6edf3" font-size="10">· Title / meta strategy</text>
+  <text x="466" y="340" fill="#6e7681" font-size="9">  decision · importance 0.90</text>
+  <text x="466" y="355" fill="#e6edf3" font-size="10">· Inline JSON-LD + OG tags</text>
+  <text x="466" y="369" fill="#6e7681" font-size="9">  decision · importance 0.88</text>
+  <text x="466" y="384" fill="#e6edf3" font-size="10">· Additional SEO rules</text>
+  <rect x="466" y="396" width="138" height="22" rx="4" fill="#1e0d40" stroke="#7048c8" stroke-width="1"/>
+  <text x="535" y="411" text-anchor="middle" fill="#bc8cff" font-size="10">recall x1 · write x2</text>
+
+  <!-- Agent 4: Code Review -->
+  <rect x="654" y="190" width="178" height="240" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <rect x="654" y="190" width="178" height="36" rx="6" fill="#7a3a00"/>
+  <rect x="654" y="214" width="178" height="12" fill="#7a3a00"/>
+  <text x="743" y="213" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">Code Review Agent</text>
+  <text x="743" y="238" text-anchor="middle" fill="#7d8590" font-size="10">agent_codereview.py</text>
+  <text x="743" y="255" text-anchor="middle" fill="#f0883e" font-size="10" font-weight="600">RECALL x3 -&gt; INSIGHTS -&gt; WRITE</text>
+  <line x1="674" y1="264" x2="812" y2="264" stroke="#30363d" stroke-width="1"/>
+  <text x="674" y="280" fill="#8b949e" font-size="10" font-weight="600">Targeted recalls:</text>
+  <text x="674" y="296" fill="#e6edf3" font-size="10">· Frontend decisions query</text>
+  <text x="674" y="311" fill="#e6edf3" font-size="10">· Performance rules query</text>
+  <text x="674" y="326" fill="#e6edf3" font-size="10">· SEO decisions query</text>
+  <text x="674" y="342" fill="#8b949e" font-size="10" font-weight="600">Writes verdict:</text>
+  <text x="674" y="358" fill="#e6edf3" font-size="10">· LGTM / BLOCK + cited IDs</text>
+  <text x="674" y="372" fill="#6e7681" font-size="9">  decision · importance 0.95</text>
+  <rect x="674" y="386" width="138" height="22" rx="4" fill="#3d1a00" stroke="#b35900" stroke-width="1"/>
+  <text x="743" y="401" text-anchor="middle" fill="#f0883e" font-size="10">recall x3 · insights x1 · write x1</text>
+
+  <!-- Agent 5: Manager -->
+  <rect x="862" y="190" width="208" height="240" rx="6" fill="#161b22" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <rect x="862" y="190" width="208" height="36" rx="6" fill="#282e36"/>
+  <rect x="862" y="214" width="208" height="12" fill="#282e36"/>
+  <text x="966" y="213" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600">Manager Tenant</text>
+  <text x="966" y="238" text-anchor="middle" fill="#7d8590" font-size="10">manager.py</text>
+  <text x="966" y="255" text-anchor="middle" fill="#f85149" font-size="10" font-weight="600">READ-ONLY · NO WRITES</text>
+  <line x1="882" y1="264" x2="1050" y2="264" stroke="#30363d" stroke-width="1"/>
+  <text x="882" y="280" fill="#8b949e" font-size="10" font-weight="600">Tools:</text>
+  <text x="882" y="296" fill="#e6edf3" font-size="10">· memclaw_list</text>
+  <text x="882" y="311" fill="#e6edf3" font-size="10">· memclaw_stats</text>
+  <text x="882" y="326" fill="#e6edf3" font-size="10">· memclaw_insights</text>
+  <text x="882" y="341" fill="#e6edf3" font-size="10">· memclaw_recall</text>
+  <text x="882" y="356" fill="#e6edf3" font-size="10">· memclaw_keystones</text>
+  <text x="882" y="374" fill="#8b949e" font-size="10" font-weight="600">Output: HEALTHY / WARNINGS /</text>
+  <text x="882" y="388" fill="#8b949e" font-size="10" font-weight="600">CRITICAL + data isolation proof</text>
+  <rect x="882" y="400" width="168" height="22" rx="4" fill="#3d0000" stroke="#a32020" stroke-width="1"/>
+  <text x="966" y="415" text-anchor="middle" fill="#ff7b72" font-size="10">memclaw_write: NOT ALLOWED</text>
+
+  <!-- Write arrows (dashed, upward) -->
+  <line x1="119" y1="190" x2="119" y2="140" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrWrite)"/>
+  <line x1="327" y1="190" x2="327" y2="140" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrWrite)"/>
+  <line x1="535" y1="190" x2="535" y2="140" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrWrite)"/>
+  <line x1="743" y1="190" x2="743" y2="140" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrWrite)"/>
+
+  <!-- Recall arrows (solid, downward) -->
+  <line x1="285" y1="140" x2="285" y2="190" stroke="#818cf8" stroke-width="2" marker-end="url(#arrRecall)"/>
+  <line x1="493" y1="140" x2="493" y2="190" stroke="#818cf8" stroke-width="2" marker-end="url(#arrRecall)"/>
+  <line x1="701" y1="140" x2="701" y2="190" stroke="#818cf8" stroke-width="2" marker-end="url(#arrRecall)"/>
+  <line x1="966" y1="140" x2="966" y2="190" stroke="#6e7681" stroke-width="2" marker-end="url(#arrGray)"/>
+
+  <!-- Arrow labels -->
+  <text x="125" y="168" fill="#3fb950" font-size="9" font-weight="600">write</text>
+  <text x="256" y="168" fill="#818cf8" font-size="9" font-weight="600">recall</text>
+  <text x="333" y="168" fill="#3fb950" font-size="9" font-weight="600">write</text>
+  <text x="463" y="168" fill="#818cf8" font-size="9" font-weight="600">recall</text>
+  <text x="541" y="168" fill="#3fb950" font-size="9" font-weight="600">write</text>
+  <text x="706" y="168" fill="#818cf8" font-size="9" font-weight="600">recall x3</text>
+  <text x="749" y="168" fill="#3fb950" font-size="9" font-weight="600">write</text>
+  <text x="971" y="168" fill="#6e7681" font-size="9" font-weight="600">read</text>
+
+  <!-- Footer -->
+  <text x="550" y="480" text-anchor="middle" fill="#3d444d" font-size="10">memclaw.net · View live memories at memclaw.net/prism</text>
+</svg>
