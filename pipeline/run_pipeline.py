@@ -76,7 +76,8 @@ PIPELINE_STEPS = [
 
 
 def check_env() -> list[str]:
-    return [k for k in ("LLM_GATEWAY_API_KEY", "MEMCLAW_API_KEY", "MEMCLAW_TENANT_ID")
+    return [k for k in ("LLM_GATEWAY_API_KEY", "LLM_GATEWAY_API_URL", "LLM_GATEWAY_MODEL",
+                        "MEMCLAW_API_KEY", "MEMCLAW_TENANT_ID", "MEMCLAW_FLEET_ID")
             if not os.environ.get(k)]
 
 
@@ -89,29 +90,72 @@ def _mask(value: str, visible: int = 4) -> str:
 
 def print_banner():
     tenant_raw = os.environ.get("MEMCLAW_TENANT_ID", "(not set)")
-    print("\n" + "=" * 65)
-    print("  MemClaw 5-Fleet SaaS Build Pipeline  (MCP tool-use)")
-    print("  Recall Before Acting · Write After Deciding")
-    print(f"  Started : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 65)
-    print(f"  MCP URL : {mcp.MCP_URL}")
-    print(f"  Transport: {os.environ.get('MEMCLAW_TRANSPORT', 'mcp')}")
-    print(f"  Fleet   : {os.environ.get('MEMCLAW_FLEET_ID', 'fleet')}")
-    print(f"  Tenant  : {_mask(tenant_raw)}")   # masked — never log raw tenant/key values
-    print(f"  Model   : {os.environ.get('LLM_GATEWAY_MODEL', 'llama-3.3-70b-versatile')}")
-    print("=" * 65 + "\n")
-
-
-def print_pipeline_table(steps):
-    print("Execution plan:")
-    print(f"  {'#':<3} {'Agent':<22} {'MCP Tool Usage'}")
-    print(f"  {'-'*3} {'-'*22} {'-'*38}")
-    for i, (name, _, desc) in enumerate(steps, 1):
-        print(f"  {i:<3} {name:<22} {desc}")
+    W = 65
+    print()
+    print("┌" + "─" * (W - 2) + "┐")
+    print("│" + "  MemClaw Fleet  ·  5-Agent MCP Pipeline".center(W - 2) + "│")
+    print("│" + "  Recall Before Acting  ·  Write After Deciding".center(W - 2) + "│")
+    print("├" + "─" * (W - 2) + "┤")
+    print(f"│  Started  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S'):<{W - 15}}│")
+    print(f"│  Fleet    : {os.environ.get('MEMCLAW_FLEET_ID', '(not set)'):<{W - 15}}│")
+    print(f"│  Tenant   : {_mask(tenant_raw):<{W - 15}}│")
+    print(f"│  Model    : {os.environ.get('LLM_GATEWAY_MODEL', '(not set)'):<{W - 15}}│")
+    print(f"│  MCP      : {mcp.MCP_URL:<{W - 15}}│")
+    print("└" + "─" * (W - 2) + "┘")
     print()
 
 
+def print_pipeline_table(steps):
+    print("  Execution plan")
+    print("  ┌─────┬────────────────────────┬──────────────────────────────────────┐")
+    print("  │  #  │ Agent                  │ MCP Tool Usage                       │")
+    print("  ├─────┼────────────────────────┼──────────────────────────────────────┤")
+    for i, (name, _, desc) in enumerate(steps, 1):
+        print(f"  │  {i}  │ {name:<22} │ {desc:<36} │")
+    print("  └─────┴────────────────────────┴──────────────────────────────────────┘")
+    print()
+
+
+def _bootstrap_agent(agent_id: str, label: str) -> None:
+    """Write two seed memories to register the agent identity in MemClaw.
+    Trust level must be set to 2 via the admin API before running the pipeline:
+    PATCH /api/agents/{agent_id}/trust  {"trust_level": 2}
+    """
+    written = 0
+    seeds = [
+        {"content": f"{label} bootstrap — agent registration (seed 1).",
+         "tags": ["bootstrap", label.lower().replace(" ", "-"), "seed"]},
+        {"content": f"{label} bootstrap — audit capability registration (seed 2).",
+         "tags": ["bootstrap", label.lower().replace(" ", "-"), "audit"]},
+    ]
+    for seed in seeds:
+        try:
+            result = mcp.call_tool("memclaw_write", {
+                "content":    seed["content"],
+                "importance": 0.1,
+                "tags":       seed["tags"],
+            }, agent_id=agent_id)
+            if isinstance(result, dict) and result.get("status") == "duplicate":
+                written += 1  # already exists — counts toward trust
+                log.debug("%s seed already exists (duplicate) — trust still valid.", label)
+            else:
+                written += 1
+        except Exception as exc:
+            log.warning("%s bootstrap seed failed (non-fatal): %s", label, exc)
+    log.info("%s pre-registered — %d seed write(s) completed (trust_level target: 2).", label, written)
+
+
 def run_pipeline(steps) -> dict:
+    # Pre-register agents that need trust_level >= 2 before the pipeline starts.
+    # memclaw_insights / memclaw_stats / memclaw_list require trust >= 2.
+    # Trust level is set permanently via the admin API (PATCH /api/agents/{id}/trust).
+    # Bootstrap writes ensure the agent identity exists in MemClaw before it runs.
+    module_set = {module for _, module, _ in steps}
+    if agent_manager in module_set:
+        _bootstrap_agent(AgentID.MANAGER, "Manager Tenant")
+    if agent_codereview in module_set:
+        _bootstrap_agent(AgentID.CODE_REVIEW, "Code Review Agent")
+
     results = {}
     for i, (name, module, _) in enumerate(steps, 1):
         log.info("[%d/%d] Starting %s", i, len(steps), name)
@@ -141,49 +185,121 @@ def _parse_verdict(text: str, keywords: list[str], fallback: str = "?") -> str:
 
 
 def print_summary(results: dict):
-    print("\n" + "=" * 65)
-    print("  PIPELINE SUMMARY")
-    print("=" * 65)
+    print("\n\n" + "═" * 65)
+    print("  ✦  RUN COMPLETE")
+    print("═" * 65)
 
+    # Agent timing table
+    print()
+    print("  Agent Results")
+    print("  ┌────────────────────────┬────────┬──────────────────────────────────┐")
+    print("  │ Agent                  │  Time  │ Tool Calls                       │")
+    print("  ├────────────────────────┼────────┼──────────────────────────────────┤")
     for name, r in results.items():
-        icon = "✓" if r["status"] == "ok" else "✗"
         t = r["elapsed_s"]
         if r["status"] == "ok":
             data = r["data"]
             by_tool: dict[str, int] = {}
             for c in data.get("tool_calls", []):
                 by_tool[c["tool"]] = by_tool.get(c["tool"], 0) + 1
-            tool_str = "  ".join(f"{k}×{v}" for k, v in by_tool.items()) or "—"
-            print(f"  {icon} {name:<22} {t:>5.1f}s  [{tool_str}]")
+            # shorten tool names for compact display
+            tool_str = "  ".join(
+                f"{k.replace('memclaw_', '')}×{v}" for k, v in by_tool.items()
+            ) or "—"
+            status_icon = "✓"
+            print(f"  │ {status_icon} {name:<21} │ {t:>5.1f}s │ {tool_str:<32} │")
         else:
-            print(f"  {icon} {name:<22} {t:>5.1f}s  ERROR: {r['error'][:40]}")
+            err = r["error"][:30]
+            print(f"  │ ✗ {name:<21} │ {t:>5.1f}s │ ERROR: {err:<25} │")
+    print("  └────────────────────────┴────────┴──────────────────────────────────┘")
 
-    # Code review verdict
+    # Verdict block — no right-border on emoji rows (emoji are double-width in terminals)
+    print()
+    print("  Verdicts")
+    print("  " + "─" * 63)
+
     cr = results.get("Code Review Agent", {})
     if cr.get("status") == "ok":
         text = cr["data"].get("final_text", "")
         verdict = _parse_verdict(text, ["LGTM", "BLOCK"])
+        if verdict == "?":
+            # Model wrote the verdict into a memory rather than its final text — scan tool results
+            for tc in cr["data"].get("tool_calls", []):
+                if tc.get("tool") == "memclaw_write" and tc.get("status") == "ok":
+                    result_content = json.dumps(tc.get("result", ""))
+                    input_content = json.dumps(tc.get("input", ""))
+                    for src in (input_content, result_content):
+                        found = _parse_verdict(src, ["LGTM", "BLOCK"])
+                        if found != "?":
+                            verdict = found
+                            break
+                if verdict != "?":
+                    break
         icon = "✅" if verdict == "LGTM" else ("🚫" if verdict == "BLOCK" else "❓")
-        print(f"\n  Code Review Verdict : {icon} {verdict}")
+        print(f"  Code Review Verdict  :  {icon}  {verdict}")
 
-    # Manager health — look for structured keywords the prompt instructs the manager to emit
     mgr = results.get("Manager Tenant", {})
     if mgr.get("status") == "ok":
         text = mgr["data"].get("final_text", "")
         health = _parse_verdict(text, ["HEALTHY", "WARNINGS", "CRITICAL"])
-        icon = "✅" if health == "HEALTHY" else ("⚠️" if health == "WARNINGS" else ("🚫" if health == "CRITICAL" else "❓"))
-        print(f"  Pipeline Health     : {icon} {health}")
-        if "zero write" in text.lower() or "no write" in text.lower():
-            print("  Data Isolation      : ✅ VERIFIED")
+        h_icon = "✅" if health == "HEALTHY" else ("⚠️" if health == "WARNINGS" else ("🚫" if health == "CRITICAL" else "❓"))
+        print(f"  Pipeline Health      :  {h_icon}  {health}")
 
-    print(f"\n  View memories at: {mcp.MEMCLAW_BASE_URL.rstrip('/')}/prism")
-    print("=" * 65 + "\n")
+        mgr_calls = mgr["data"].get("tool_calls", [])
+        write_calls = [c for c in mgr_calls if "write" in c["tool"] or "manage" in c["tool"]]
+        read_ok = any(
+            c["status"] == "ok" and c["tool"] in {"memclaw_list", "memclaw_stats", "memclaw_insights", "memclaw_recall", "memclaw_entity_get"}
+            for c in mgr_calls
+        )
+        if not write_calls and read_ok:
+            iso_icon, iso_text = "✅", "VERIFIED  (zero writes, reads ok)"
+        elif not write_calls and not read_ok:
+            iso_icon, iso_text = "⚠️", "UNCONFIRMED  (reads failed — check trust level)"
+        else:
+            iso_icon, iso_text = "🚫", "FAILED  (unexpected writes detected)"
+        print(f"  Data Isolation       :  {iso_icon}  {iso_text}")
+
+    print("  " + "─" * 63)
+    print()
+    print(f"  ▸ View memories : {mcp.MEMCLAW_BASE_URL.rstrip('/')}/prism")
+    print("═" * 65 + "\n")
+
+
+def reset_fleet_memories() -> None:
+    """Delete all memories in the current fleet after a run."""
+    fleet_id = os.environ.get("MEMCLAW_FLEET_ID", "fleet")
+    log.info("Resetting fleet memories for fleet_id=%r …", fleet_id)
+    try:
+        result = mcp.call_tool("memclaw_list", {"fleet_id": fleet_id}, agent_id=AgentID.MANAGER)
+        memories = result.get("items") or result.get("memories") or result.get("results") or []
+        if not memories:
+            log.info("No memories found to delete.")
+            return
+        deleted = 0
+        failed = 0
+        for mem in memories:
+            mid = mem.get("id")
+            if not mid:
+                continue
+            try:
+                mcp.call_tool("memclaw_manage", {"op": "delete", "memory_id": mid}, agent_id=AgentID.MANAGER)
+                deleted += 1
+            except Exception as exc:
+                log.warning("Failed to delete memory %s: %s", mid, exc)
+                failed += 1
+        log.info("Fleet reset complete — deleted %d, failed %d.", deleted, failed)
+        print(f"\n  Fleet Reset         : {deleted} memories deleted, {failed} failed.")
+    except Exception as exc:
+        log.error("Fleet reset failed: %s", exc)
+        print(f"\n  Fleet Reset         : ⚠️  FAILED — {exc}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="MemClaw 5-Fleet SaaS Build Pipeline")
     parser.add_argument("--dry-run",      action="store_true", help="Check env + MCP connectivity, then exit")
     parser.add_argument("--skip-manager", action="store_true", help="Skip Manager Tenant audit")
+    parser.add_argument("--reset",        action="store_true", help="Delete all fleet memories after the run completes")
+    parser.add_argument("--loop",         action="store_true", help="Re-run pipeline after each run; resets memories between iterations, pauses for keypress")
     parser.add_argument("--json-output",  metavar="FILE",      help="Write full results to JSON file")
     parser.add_argument("--log-level",    default="INFO",       help="Logging level (DEBUG/INFO/WARNING/ERROR)")
     args = parser.parse_args()
@@ -218,13 +334,33 @@ def main():
         sys.exit(0)
 
     print_pipeline_table(steps)
-    results = run_pipeline(steps)
-    print_summary(results)
 
-    if args.json_output:
-        safe = json.loads(json.dumps(results, default=str))
-        Path(args.json_output).write_text(json.dumps(safe, indent=2), encoding="utf-8")
-        log.info("Full results written to %s", args.json_output)
+    run_number = 0
+    while True:
+        run_number += 1
+        if args.loop and run_number > 1:
+            print(f"\n  ── Loop iteration {run_number} ──\n")
+
+        results = run_pipeline(steps)
+        print_summary(results)
+
+        if args.reset or args.loop:
+            reset_fleet_memories()
+
+        if args.json_output:
+            safe = json.loads(json.dumps(results, default=str))
+            Path(args.json_output).write_text(json.dumps(safe, indent=2), encoding="utf-8")
+            log.info("Full results written to %s", args.json_output)
+
+        if not args.loop:
+            break
+
+        print("\n  Press Enter to run again, or Ctrl+C to exit…")
+        try:
+            input()
+        except KeyboardInterrupt:
+            print("\n  Stopped.")
+            break
 
 
 if __name__ == "__main__":

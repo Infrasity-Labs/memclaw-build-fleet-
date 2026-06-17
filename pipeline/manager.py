@@ -28,9 +28,10 @@ Step 3 — Call memclaw_insights with focus="contradictions" to find cross-agent
 Step 4 — Call memclaw_insights again with focus="patterns" to find emergent patterns.
 Step 5 — Synthesise a full audit report covering:
           a) Pipeline health: HEALTHY / WARNINGS / CRITICAL
+             (CRITICAL = agent crashed or zero memories; empty keystones is NOT a failure)
           b) Total memories audited and breakdown by agent
           c) Any contradictions found between agent decisions
-          d) Rules audit: is each critical rule present? (bundle constraint, image w/h, schema approach)
+          d) Rules audit: look for bundle constraint, image w/h, schema approach in recalled memories
           e) Data isolation confirmation: you made zero write calls — state this explicitly
 
 Do NOT call memclaw_write, memclaw_manage, memclaw_evolve, memclaw_tune, or any write operation.
@@ -50,8 +51,14 @@ Then write a full audit report that includes:
 - Pipeline health verdict (HEALTHY / WARNINGS / CRITICAL)
 - Memory count per agent
 - Any contradictions found (or "none detected")
-- Rules audit: confirm bundle constraint, image dimension rule, and schema approach are all present
+- Rules audit: check whether bundle constraint, image dimension rule, and schema approach appear in the recalled memories (NOT in keystones — keystones returning empty is normal when no mandatory governance rules are configured)
 - Data isolation statement: confirm you made zero write operations
+
+Note on Pipeline Health verdict:
+  HEALTHY  — all agents completed, memories written, no unresolved contradictions
+  WARNINGS — minor gaps or unresolved patterns, but nothing blocking
+  CRITICAL — reserved for actual failures: agent crashed, zero memories written, or a hard contradiction that was not resolved
+  An empty keystones result is NOT a reason for CRITICAL — it simply means no mandatory governance rules are configured for this fleet.
 
 This report demonstrates that an isolated management tenant can observe a full pipeline
 without touching its state."""

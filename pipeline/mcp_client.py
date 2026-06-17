@@ -46,7 +46,7 @@ def _headers() -> dict:
     }
 
 
-def _mcp_headers() -> dict:
+def _mcp_headers(agent_id: str | None = None) -> dict:
     headers = {
         "X-API-Key": _cfg("MEMCLAW_API_KEY"),
         "Content-Type": "application/json",
@@ -54,6 +54,8 @@ def _mcp_headers() -> dict:
     }
     if _mcp_session_id:
         headers["Mcp-Session-Id"] = _mcp_session_id
+    if agent_id:
+        headers["X-Agent-ID"] = agent_id
     return headers
 
 
@@ -117,7 +119,7 @@ def _decode_json_or_sse(response: requests.Response) -> dict:
     raise ValueError("SSE response did not contain a JSON data event")
 
 
-def _mcp_json_rpc(method: str, params: dict | None = None, *, expect_response: bool = True) -> dict:
+def _mcp_json_rpc(method: str, params: dict | None = None, *, expect_response: bool = True, agent_id: str | None = None) -> dict:
     url = _validate_mcp_url()
     body: dict[str, Any] = {
         "jsonrpc": "2.0",
@@ -129,7 +131,7 @@ def _mcp_json_rpc(method: str, params: dict | None = None, *, expect_response: b
 
     for attempt in range(3):
         try:
-            response = requests.post(url, headers=_mcp_headers(), json=body, timeout=60)
+            response = requests.post(url, headers=_mcp_headers(agent_id), json=body, timeout=60)
 
             global _mcp_session_id
             session_id = response.headers.get("Mcp-Session-Id")
@@ -253,9 +255,15 @@ def _mcp_call_tool(tool_name: str, args: dict) -> Any:
     result = _mcp_json_rpc("tools/call", {
         "name": tool_name,
         "arguments": args,
-    })
+    }, agent_id=args.get("agent_id"))
     if result.get("isError"):
-        raise RequestException(f"MCP tool {tool_name} returned error: {_extract_tool_result(result)}")
+        extracted = _extract_tool_result(result)
+        # CONFLICT means a near-duplicate already exists — treat as a successful no-op
+        # so the model doesn't loop retrying the same write.
+        if isinstance(extracted, dict) and extracted.get("error", {}).get("code") == "CONFLICT":
+            existing_id = extracted["error"].get("message", "").split(":")[-1].strip()
+            return {"status": "duplicate", "existing_id": existing_id, "agent_id": args.get("agent_id")}
+        raise RequestException(f"MCP tool {tool_name} returned error: {extracted}")
     return _extract_tool_result(result)
 
 

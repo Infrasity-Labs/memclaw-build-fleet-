@@ -21,8 +21,8 @@ Step 2 — Read the recalled memories carefully. Note any CSS, layout, or image 
 Step 3 — Audit those decisions against CWV targets: LCP < 2.5s, CLS < 0.1, INP < 200ms.
 Step 4 — Call memclaw_write to save your findings as rule-type memories.
 
-When writing memories use type="rule" for mandatory constraints, importance 0.85–0.95.
-Write at minimum 3 rule memories:
+When writing memories omit the memory_type field and let MemClaw auto-classify. Set importance 0.85–0.95.
+Write at minimum 3 memories:
 1. Bundle size constraint (this page has no build step — all CSS/JS must be inline)
 2. Image rule: "All images must have explicit width and height attributes" (prevents CLS)
 3. Lazy loading rules for below-fold content

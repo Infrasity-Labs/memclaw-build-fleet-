@@ -22,8 +22,8 @@ Step 2 — Read carefully. If the Performance Agent wrote a rule about zero exte
           (use inline JSON-LD, never recommend an external schema library).
 Step 3 — Call memclaw_write to save your SEO decisions as decision-type memories.
 
-When writing memories use type="decision", importance 0.85–0.95.
-Write at minimum 2 decision memories:
+When writing memories omit the memory_type field and let MemClaw auto-classify. Set importance 0.85–0.95.
+Write at minimum 2 memories:
 1. Title + meta description strategy (keyword, brand, character limits)
 2. Schema markup approach + OpenGraph tags (cite the performance constraint you respected)
 """
