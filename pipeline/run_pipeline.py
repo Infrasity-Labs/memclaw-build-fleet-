@@ -175,12 +175,28 @@ def run_pipeline(steps) -> dict:
     return results
 
 
+_HEALTH_SYNONYMS: dict[str, list[str]] = {
+    "HEALTHY":  ["ALL GOOD", "NO ISSUES", "OPERATING WELL", "OPERATING HEALTHILY",
+                 "OPERATING CORRECTLY", "COMPLETED SUCCESSFULLY", "NO CONTRADICTIONS",
+                 "NO CONFLICTS", "GREEN"],
+    "WARNINGS": ["MINOR ISSUES", "MINOR GAPS", "SOME GAPS", "UNRESOLVED PATTERNS",
+                 "PARTIAL", "INCOMPLETE"],
+    "CRITICAL": ["CRITICAL FAILURE", "HARD CONTRADICTION", "ZERO MEMORIES",
+                 "AGENT CRASHED", "FAILED TO COMPLETE"],
+}
+
+
 def _parse_verdict(text: str, keywords: list[str], fallback: str = "?") -> str:
-    """Case-insensitive scan for first matching keyword in text."""
-    upper = text.upper()
+    """Case-insensitive scan for first matching keyword (and synonyms for health verdicts)."""
+    if not text:
+        return fallback
+    upper = str(text).upper()
     for kw in keywords:
         if kw.upper() in upper:
             return kw
+        for syn in _HEALTH_SYNONYMS.get(kw, []):
+            if syn.upper() in upper:
+                return kw
     return fallback
 
 
@@ -242,15 +258,41 @@ def print_summary(results: dict):
     if mgr.get("status") == "ok":
         text = mgr["data"].get("final_text", "")
         health = _parse_verdict(text, ["HEALTHY", "WARNINGS", "CRITICAL"])
+        if health == "?":
+            # Model may have embedded the verdict in a tool input or result — scan all calls
+            for tc in mgr["data"].get("tool_calls", []):
+                for src in (json.dumps(tc.get("input", "")), json.dumps(tc.get("result", ""))):
+                    found = _parse_verdict(src, ["HEALTHY", "WARNINGS", "CRITICAL"])
+                    if found != "?":
+                        health = found
+                        break
+                if health != "?":
+                    break
         h_icon = "✅" if health == "HEALTHY" else ("⚠️" if health == "WARNINGS" else ("🚫" if health == "CRITICAL" else "❓"))
         print(f"  Pipeline Health      :  {h_icon}  {health}")
 
         mgr_calls = mgr["data"].get("tool_calls", [])
-        write_calls = [c for c in mgr_calls if "write" in c["tool"] or "manage" in c["tool"]]
-        read_ok = any(
-            c["status"] == "ok" and c["tool"] in {"memclaw_list", "memclaw_stats", "memclaw_insights", "memclaw_recall", "memclaw_entity_get"}
-            for c in mgr_calls
-        )
+        write_calls = [c for c in mgr_calls if c.get("tool") and ("write" in c["tool"] or "manage" in c["tool"])]
+        def _is_successful_read(c: dict) -> bool:
+            if c.get("tool") not in {"memclaw_list", "memclaw_stats", "memclaw_recall", "memclaw_entity_get", "memclaw_keystones"}:
+                return False
+            if c.get("status") != "ok":
+                return False
+            return True
+
+        def _insights_ok(c: dict) -> bool:
+            """memclaw_insights returns HTTP 200 even on auth/trust errors — check the body."""
+            if c["tool"] != "memclaw_insights" or c.get("status") != "ok":
+                return False
+            result = c.get("result", {})
+            if isinstance(result, dict):
+                # Error bodies have "error" key or "detail" containing failure messages
+                err = result.get("error") or result.get("detail") or ""
+                if err and ("not registered" in str(err).lower() or "403" in str(err) or "trust" in str(err).lower()):
+                    return False
+            return True
+
+        read_ok = any(_is_successful_read(c) or _insights_ok(c) for c in mgr_calls)
         if not write_calls and read_ok:
             iso_icon, iso_text = "✅", "VERIFIED  (zero writes, reads ok)"
         elif not write_calls and not read_ok:

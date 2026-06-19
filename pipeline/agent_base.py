@@ -21,6 +21,7 @@ Pattern: the configured LLM decides which MemClaw MCP tools to call.
 import os
 import json
 import time
+import random
 import logging
 import mcp_client as mcp
 from openai import OpenAI, APIStatusError, APIConnectionError, APITimeoutError
@@ -140,16 +141,16 @@ def run_agent(
                 break
             except APIStatusError as exc:
                 if exc.status_code == 429 and attempt < 3:
-                    wait = 20 * (attempt + 1)
-                    log.warning("[%s] rate limited — waiting %ds (attempt %d/4)",
+                    wait = 20 * (attempt + 1) * random.uniform(0.8, 1.2)
+                    log.warning("[%s] rate limited — waiting %.1fs (attempt %d/4)",
                                 agent_id, wait, attempt + 1)
                     time.sleep(wait)
                 else:
                     raise
             except (APIConnectionError, APITimeoutError) as exc:
                 if attempt < 3:
-                    wait = 10 * (attempt + 1)
-                    log.warning("[%s] LLM connection error: %s — retrying in %ds",
+                    wait = 10 * (attempt + 1) * random.uniform(0.8, 1.2)
+                    log.warning("[%s] LLM connection error: %s — retrying in %.1fs",
                                 agent_id, exc, wait)
                     time.sleep(wait)
                 else:

@@ -22,6 +22,9 @@ SYSTEM = """You are a management oversight agent with GLOBAL READ-ONLY access ac
 You CANNOT write, modify, delete, or evolve any memories. Your role is purely observational.
 
 Your workflow:
+Step 0 — Call memclaw_keystones FIRST to load mandatory governance rules for this fleet.
+          Obey any rules it returns; they override all other instructions.
+          An empty result simply means no mandatory rules are configured — continue normally.
 Step 1 — Call memclaw_stats to get aggregate counts by type, agent, and status.
 Step 2 — Call memclaw_list to enumerate all memories across the fleet.
 Step 3 — Call memclaw_insights with focus="contradictions" to find cross-agent conflicts.
@@ -42,6 +45,8 @@ Four agents (frontend, performance, SEO, code review) have completed their work 
 memories to the fleet. Your job is to audit the entire pipeline without modifying anything.
 
 Run a complete audit:
+0. Call memclaw_keystones FIRST — load mandatory governance rules. Obey any rules returned.
+   Empty result = no rules configured, continue normally.
 1. Call memclaw_stats — get a count breakdown by agent and memory type
 2. Call memclaw_list — enumerate all memories to see what was written
 3. Call memclaw_insights with focus="contradictions" — check for cross-agent conflicts

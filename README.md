@@ -2,15 +2,15 @@
 
 <img src="docs/images/shared-fleet-memory-banner.png" alt="shared fleet memory" width="100%" />
 
-# MemClaw Fleet — 5-Agent Pipeline with Shared Memory
+# MemClaw Fleet: 5-Agent Pipeline with Shared Memory
 
 **A runnable reference implementation of multi-agent constraint propagation using [MemClaw](https://memclaw.net).**<br>
 Each agent recalls what the previous one decided before acting. Clone it, run it, adapt it to any domain.
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://python.org)
-[![License MIT](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
-[![MemClaw](https://img.shields.io/badge/MemClaw-releases-orange?style=flat-square)](https://github.com/Infrasity-Labs/memclaw-build-fleet/releases)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/Infrasity-Labs/memclaw-build-fleet/pulls)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![MemClaw](https://img.shields.io/badge/MemClaw-releases-orange?style=flat-square)](https://github.com/caura-ai/caura-memclaw/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/caura-ai/memclaw-build-fleet/pulls)
 
 [What is MemClaw?](#what-is-memclaw) · [Why Multi-Agent?](#why-multi-agent) · [Quickstart](#getting-started) · [New Fleet](#creating-a-new-fleet) · [Query Memories](#querying-fleet-memories) · [Add an Agent](#adding-a-new-agent)
 
@@ -20,7 +20,7 @@ Each agent recalls what the previous one decided before acting. Clone it, run it
 
 ## What Is MemClaw?
 
-[MemClaw](https://memclaw.net) is a governed shared memory platform built for AI agent fleets. It's not a vector database bolted onto your pipeline — it's a memory layer designed from the ground up for multi-agent coordination.
+[MemClaw](https://memclaw.net) is a governed shared memory platform built for AI agent fleets. It's not a vector database bolted onto your pipeline; it's a memory layer designed from the ground up for multi-agent coordination.
 
 > **New to MCP?** MCP (Model Context Protocol) is an open standard that lets LLMs call external tools via a consistent interface. MemClaw exposes its memory operations as MCP tools, so any MCP-compatible agent or IDE (Claude Code, Cursor, OpenClaw) can read and write fleet memory without custom integration code. [Learn more →](https://modelcontextprotocol.io)
 
@@ -61,7 +61,7 @@ Single agents hit a wall when complexity grows. They lose context, contradict th
 
 **Multi-agent pipelines solve this by dividing work across specialists.** But they introduce a new problem: agents that can't see each other's decisions make contradictory choices. Agent A bans external JavaScript. Agent B loads a schema library from a CDN. Nobody catches it.
 
-**MemClaw fixes this with shared fleet memory.** Every agent writes its decisions before finishing. Every downstream agent recalls those decisions before acting. Constraints propagate automatically — not because the code hard-wires them, but because agents read each other's memory.
+**MemClaw fixes this with shared fleet memory.** Every agent writes its decisions before finishing. Every downstream agent recalls those decisions before acting. Constraints propagate automatically not because the code hard-wires them, but because agents read each other's memory.
 
 This repo demonstrates that pattern end-to-end:
 
@@ -69,8 +69,8 @@ This repo demonstrates that pattern end-to-end:
 | :--- | :--- |
 | **Constraint propagation** | Performance writes "zero external JS" → SEO recalls it → chooses inline JSON-LD |
 | **Cross-agent citation** | Code Review cites Performance + SEO memory IDs in its LGTM verdict |
-| **Data isolation** | Manager agent has no `write` access — confirms zero writes every run |
-| **Hybrid recall** | Vector + keyword + knowledge graph — agents find relevant memories even with paraphrased queries |
+| **Data isolation** | Manager agent has no `write` access; confirms zero writes every run |
+| **Hybrid recall** | Vector + keyword + knowledge graph; agents find relevant memories even with paraphrased queries |
 
 ---
 
@@ -94,19 +94,21 @@ This repo demonstrates that pattern end-to-end:
 
 ## MCP Tool Access Per Agent
 
-Each agent receives an explicit allowlist of MCP tools. Agents cannot call tools outside their allowlist — this enforces least-privilege and makes the data flow auditable.
+Each agent receives an explicit allowlist of MCP tools. Agents cannot call tools outside their allowlist; this enforces least-privilege and makes the data flow auditable.
 
 | Agent | Role | `write` | `recall` | `insights` | `list` | `stats` | `keystones` | `entity_get` |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Frontend** | First in chain — nothing to recall yet. Architects the page and writes all structural decisions. | ✓ | — | — | — | — | — | — |
-| **Performance** | Recalls frontend decisions, audits Core Web Vitals, writes bundle and image rules. | ✓ | ✓ | — | — | — | — | — |
-| **SEO** | Recalls all fleet memories so schema choices respect Performance's bundle constraints. | ✓ | ✓ | — | — | — | — | — |
-| **Code Review** | Recalls full fleet, runs contradiction detection, issues LGTM/BLOCK with cited memory IDs. | ✓ | ✓ | ✓ | — | — | — | — |
-| **Manager** | Read-only audit across the configured fleet. Proves data isolation — no writes allowed. | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Frontend** | First in chain; nothing to recall yet. Architects the page and writes all structural decisions. | ✓ |  |  |  |  |  |  |
+| **Performance** | Recalls frontend decisions, audits Core Web Vitals, writes bundle and image rules. | ✓ | ✓ |  |  |  |  |  |
+| **SEO** | Recalls all fleet memories so schema choices respect Performance's bundle constraints. | ✓ | ✓ |  |  |  |  |  |
+| **Code Review** | Recalls full fleet, runs contradiction detection, issues LGTM/BLOCK with cited memory IDs. | ✓ | ✓ | ✓ |  |  |  |  |
+| **Manager** | Read-only audit across the configured fleet. Proves data isolation; no writes allowed. |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-> **Why restrict tools?** Giving every agent every tool is a common mistake. The Manager agent's inability to call `memclaw_write` is enforced at the tool-schema level — it simply never receives that tool definition. At the end of every run it reports zero write operations, which is the read-only isolation proof.
+> **Why restrict tools?** Giving every agent every tool is a common mistake. The Manager agent's inability to call `memclaw_write` is enforced at the tool-schema level; it simply never receives that tool definition. At the end of every run it reports zero write operations, which is the read-only isolation proof.
 
-> **`memclaw_insights` scope note:** At default trust level, `memclaw_insights` operates on the calling agent's own memories (`scope="agent"`). Cross-agent contradiction detection works because Code Review first recalls all fleet memories and the model reasons over them directly. The `insights` call adds automated pattern/staleness analysis on top of that. For full cross-agent `insights`, elevated trust is required — available on managed MemClaw accounts.
+> **What the Manager actually audits:** Before the Manager's `run()` is called, the orchestrator writes two lightweight bootstrap seed memories under the Manager's agent ID to register its identity in MemClaw (required for trust elevation). Those 2 writes happen in the orchestrator pre-flight; the Manager's own audit phase makes zero writes. When you see `memclaw_stats` return `total: 2`, that reflects those seeds scoped to the Manager agent, not the full fleet. The full fleet memory list comes from `memclaw_list`, which enumerates all memories across all agents in the fleet.
+
+> **`memclaw_insights` and `memclaw_stats` scope note:** At default trust level, both `memclaw_insights` and `memclaw_stats` operate on the calling agent's own memories only. This means `memclaw_stats` will return a count scoped to the Manager agent (the 2 bootstrap seeds), not the full fleet; don't be surprised if you see `total: 2` rather than the ~20+ memories the other agents wrote. The complete fleet memory list comes from `memclaw_list`, which does enumerate all agents. Cross-agent contradiction detection works because Code Review first recalls all fleet memories and the model reasons over them directly; `insights` adds automated pattern/staleness analysis on top. For full cross-agent `insights` and `stats`, elevated trust is required; available on managed MemClaw accounts.
 
 ---
 
@@ -114,19 +116,11 @@ Each agent receives an explicit allowlist of MCP tools. Agents cannot call tools
 
 MemClaw provides three levels of isolation that can be combined. This pipeline uses fleet-level namespacing as the default.
 
-<<<<<<< HEAD
-| Layer | Granularity | How it works | Example value | This repo |
-| :--- | :--- | :--- | :--- | :--- |
-| **Tenant** | Coarsest | Hard structural boundary enforced at the storage layer via row-level security + API key binding. Tenants cannot see each other's data under any circumstances. | `MEMCLAW_TENANT_ID=acme-corp` | One tenant per team |
-| **`fleet_id` namespace** | Mid-level | Every memory is tagged with a `fleet_id`. Reads and writes are scoped to that tag — multiple fleets coexist inside one tenant without bleeding into each other. | `MEMCLAW_FLEET_ID=payments-audit-fleet` | **Default — used here** |
-| **`scope_agent`** | Finest | Per-row server-side ACL flag. When set, only the agent that wrote the memory can recall it. Other agents in the same fleet are blocked. | `scope_agent=true` in `memclaw_write` | Not set in this repo |
-=======
 | Layer                    | Granularity | How it works                                                                                                                                                    | Example value                           | This repo               |
 | ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------- |
 | **Tenant**               | Coarsest    | Hard structural boundary enforced at the storage layer via row-level security + API key binding. Tenants cannot see each other's data under any circumstances.  | `MEMCLAW_TENANT_ID=acme-corp`           | One tenant per team     |
-| **`fleet_id` namespace** | Mid-level   | Every memory is tagged with a `fleet_id`. Reads and writes are scoped to that tag multiple fleets coexist inside one tenant without bleeding into each other. | `MEMCLAW_FLEET_ID=payments-audit-fleet` | **Default used here** |
+| **`fleet_id` namespace** | Mid-level   | Every memory is tagged with a `fleet_id`. Reads and writes are scoped to that tag; multiple fleets coexist inside one tenant without bleeding into each other. | `MEMCLAW_FLEET_ID=payments-audit-fleet` | **Default used here** |
 | **`scope_agent`**        | Finest      | Per-row server-side ACL flag. When set, only the agent that wrote the memory can recall it. Other agents in the same fleet are blocked.                         | `scope_agent=true` in `memclaw_write`   | Not set in this repo    |
->>>>>>> main
 
 **Recommended defaults:**
 
@@ -165,21 +159,21 @@ memclaw-build-fleet/
 ### Prerequisites
 
 - Python 3.11 or later
-- A free [MemClaw account](https://memclaw.net) — sign up and get your `MEMCLAW_API_KEY` and `MEMCLAW_TENANT_ID` from the [Prism dashboard](https://memclaw.net/prism). The tenant ID is shown on your dashboard home page immediately after sign-up.
+- A free [MemClaw account](https://memclaw.net). Sign up and get your `MEMCLAW_API_KEY` and `MEMCLAW_TENANT_ID` from the [Prism dashboard](https://memclaw.net/prism). The tenant ID is shown on your dashboard home page immediately after sign-up.
 - An LLM that supports OpenAI-compatible function calling. Two options are covered below.
 
 ---
 
-### Option A — Managed Cloud LLM
+### Option A: Managed Cloud LLM
 
 Any provider that exposes an OpenAI-compatible `/v1/chat/completions` endpoint with function calling support will work.
 
-> **Model requirement:** The model must support `tool_choice` / function calling. If you see zero tool calls in the output, the model does not support it — switch models.
+> **Model requirement:** The model must support `tool_choice` / function calling. If you see zero tool calls in the output, the model does not support it; switch models.
 
 #### 1. Clone and install
 
 ```bash
-git clone https://github.com/Infrasity-Labs/memclaw-build-fleet.git
+git clone https://github.com/caura-ai/memclaw-build-fleet.git
 cd memclaw-build-fleet
 
 python -m venv .venv
@@ -217,7 +211,7 @@ MEMCLAW_FLEET_ID=memclaw-build-fleet
 
 #### 3. Elevate agent trust (one-time, required)
 
-The Manager and Code Review agents need `trust_level=2` to call `memclaw_stats`, `memclaw_list`, and `memclaw_insights`. Run these two commands once per tenant — they persist and never need repeating:
+The Manager and Code Review agents need `trust_level=2` to call `memclaw_stats`, `memclaw_list`, and `memclaw_insights`. Run these two commands once per tenant; they persist and never need repeating:
 
 ```bash
 curl -X PATCH "https://memclaw.net/api/agents/manager-tenant/trust?tenant_id=YOUR_TENANT_ID" \
@@ -233,6 +227,8 @@ curl -X PATCH "https://memclaw.net/api/agents/code-review-agent/trust?tenant_id=
 
 > If you skip this step the Manager and Code Review agents will receive 403 errors and the pipeline will report `Data Isolation: ⚠️ UNCONFIRMED`. See the [Troubleshooting](#troubleshooting) table for details.
 
+> **Tenant ID format note:** MemClaw silently normalizes underscores to hyphens in agent IDs and tenant IDs (e.g. `ran_test` → `ran-test`). Paste your tenant ID exactly as shown in the Prism dashboard. If it contains underscores, the PATCH will return 403. Use the hyphenated form if you encounter a 403 on an otherwise correct key.
+
 #### 4. Verify and run
 
 ```bash
@@ -242,7 +238,7 @@ python pipeline/run_pipeline.py
 
 ---
 
-### Option B — Fully Local with Ollama (no API key required)
+### Option B: Fully Local with Ollama (no API key required)
 
 Runs entirely on your machine. No cloud provider, no API key.
 
@@ -261,7 +257,7 @@ Other supported models: `mistral-nemo`, `qwen2.5`, `nous-hermes2`. Verify functi
 #### 3. Clone and install
 
 ```bash
-git clone https://github.com/Infrasity-Labs/memclaw-build-fleet.git
+git clone https://github.com/caura-ai/memclaw-build-fleet.git
 cd memclaw-build-fleet
 
 python -m venv .venv
@@ -294,7 +290,7 @@ Ollama's OpenAI-compatible server accepts any non-empty string as the API key. `
 
 #### 5. Elevate agent trust (one-time, required)
 
-Same as Option A — run the two `curl -X PATCH` commands from [Step 3 above](#3-elevate-agent-trust-one-time-required) before running the pipeline.
+Same as Option A; run the two `curl -X PATCH` commands from [Step 3 above](#3-elevate-agent-trust-one-time-required) before running the pipeline.
 
 #### 6. Start Ollama and run
 
@@ -317,7 +313,7 @@ python pipeline/run_pipeline.py
 # Skip the Manager audit (faster iteration during development)
 python pipeline/run_pipeline.py --skip-manager
 
-# Loop mode — resets memories between runs, pauses for Enter between iterations
+# Loop mode: resets memories between runs, pauses for Enter between iterations
 python pipeline/run_pipeline.py --loop
 
 # Reset all fleet memories after the run completes
@@ -343,30 +339,9 @@ python pipeline/manager.py
 
 ### `--dry-run`
 
-Use `--dry-run` to verify your environment and MemClaw connectivity before running the full pipeline. It checks that all required env vars are set, opens an MCP session, calls `tools/list`, and exits — no LLM calls, no memories written.
+Use `--dry-run` to verify your environment and MemClaw connectivity before running the full pipeline. It checks that all required env vars are set, opens an MCP session, calls `tools/list`, and exits; no LLM calls, no memories written.
 
-<<<<<<< HEAD
 ```bash
-=======
-```
-  MemClaw 5-Fleet SaaS Build Pipeline  (MCP tool-use)
-  Recall Before Acting · Write After Deciding
-  Started : 2026-06-06 10:58:10
-  MCP URL : https://memclaw.net/mcp
-  Transport: mcp
-  Fleet   : memclaw-build-fleet
-  Tenant  : **********fa9c
-  Model   : your-model-name
-
-Execution plan:
-  #   Agent                  MCP Tool Usage
-  --- ---------------------- --------------------------------------
-  1   Frontend Agent         recall—  write:HTML5/CSS decisions
-  2   Performance Agent      recall:frontend → write:CWV rules
-  3   SEO Agent              recall:all → write:SEO decisions
-  4   Code Review Agent      recall:all + insights → write:verdict
-  5   Manager Tenant         list+stats+insights  (read-only audit)
->>>>>>> main
 python pipeline/run_pipeline.py --dry-run
 ```
 
@@ -375,64 +350,56 @@ python pipeline/run_pipeline.py --dry-run
 If any required env var is missing, the run exits immediately with a clear error before touching the network:
 
 ```
-ERROR __main__ — Missing required env vars: LLM_GATEWAY_API_KEY, LLM_GATEWAY_API_URL, LLM_GATEWAY_MODEL, MEMCLAW_API_KEY, MEMCLAW_TENANT_ID, MEMCLAW_FLEET_ID
+ERROR __main__  Missing required env vars: LLM_GATEWAY_API_KEY, LLM_GATEWAY_API_URL, LLM_GATEWAY_MODEL, MEMCLAW_API_KEY, MEMCLAW_TENANT_ID, MEMCLAW_FLEET_ID
 Copy .env.example → .env and fill in your keys.
 ```
 
 ### Full pipeline run
 
 ```
-┌───────────────────────────────────────────────────────────────┐
-│              MemClaw Fleet  ·  5-Agent MCP Pipeline           │
-│          Recall Before Acting  ·  Write After Deciding        │
-├───────────────────────────────────────────────────────────────┤
-│  Started  : 2026-06-06 10:58:10                               │
-│  Fleet    : memclaw-build-fleet                               │
-│  Tenant   : **********fa9c                                    │
-│  Model    : your-model-name                                   │
-│  MCP      : https://memclaw.net/mcp                           │
-└───────────────────────────────────────────────────────────────┘
+MemClaw Fleet  ·  5-Agent MCP Pipeline
+Recall Before Acting  ·  Write After Deciding
 
-  Execution plan
-  ┌─────┬────────────────────────┬──────────────────────────────────────┐
-  │  #  │ Agent                  │ MCP Tool Usage                       │
-  ├─────┼────────────────────────┼──────────────────────────────────────┤
-  │  1  │ Frontend Agent         │ recall:—  write:HTML5/CSS decisions  │
-  │  2  │ Performance Agent      │ recall:frontend → write:CWV rules    │
-  │  3  │ SEO Agent              │ recall:all → write:SEO decisions      │
-  │  4  │ Code Review Agent      │ recall:all + insights → write:verdict │
-  │  5  │ Manager Tenant         │ list+stats+insights  (read-only audit)│
-  └─────┴────────────────────────┴──────────────────────────────────────┘
-
-...
-
-══════════════════════════════════════════════════════════════════
-  ✦  RUN COMPLETE
-══════════════════════════════════════════════════════════════════
-
-  Agent Results
-  ┌────────────────────────┬────────┬──────────────────────────────────┐
-  │ Agent                  │  Time  │ Tool Calls                       │
-  ├────────────────────────┼────────┼──────────────────────────────────┤
-  │ ✓ Frontend Agent       │  18.4s │ write×3                          │
-  │ ✓ Performance Agent    │  21.3s │ recall×1  write×3                │
-  │ ✓ SEO Agent            │  33.1s │ recall×1  write×2                │
-  │ ✓ Code Review Agent    │  34.0s │ recall×3  insights×1  write×1    │
-  │ ✓ Manager Tenant       │  40.7s │ stats×1  list×1  insights×2      │
-  └────────────────────────┴────────┴──────────────────────────────────┘
-
-  Verdicts
-  ───────────────────────────────────────────────────────────────
-  Code Review Verdict  :  <✅ LGTM or 🚫 BLOCK — depends on model>
-  Pipeline Health      :  <✅ HEALTHY, ⚠️ WARNINGS, or 🚫 CRITICAL — depends on model>
-  Data Isolation       :  <✅ VERIFIED or ⚠️ UNCONFIRMED — depends on Manager agent trust level>
-  ───────────────────────────────────────────────────────────────
-
-  ▸ View memories : https://memclaw.net/prism
-══════════════════════════════════════════════════════════════════
+  Started  : 2026-06-06 10:58:10
+  Fleet    : memclaw-build-fleet
+  Tenant   : **********fa9c
+  Model    : your-model-name
+  MCP      : https://memclaw.net/mcp
 ```
 
-> **Note on verdict reproducibility:** `Code Review Verdict` and `Pipeline Health` are emitted by the LLM and are model-dependent. Different models (or the same model on different runs) may produce `LGTM` or `BLOCK` depending on how they interpret recalled memories and any detected contradictions. A `BLOCK` verdict is not a pipeline failure — it means the model found a real or apparent inconsistency (e.g. SEO inline JSON-LD read as conflicting with the Performance "no external JS" rule). Review the agent's `final_text` for its cited reasoning.
+**Execution plan**
+
+| # | Agent | MCP Tool Usage |
+| :---: | :--- | :--- |
+| 1 | Frontend Agent | `recall: none  →  write: HTML5/CSS decisions` |
+| 2 | Performance Agent | `recall: frontend  →  write: CWV rules` |
+| 3 | SEO Agent | `recall: all  →  write: SEO decisions` |
+| 4 | Code Review Agent | `recall: all + insights  →  write: verdict` |
+| 5 | Manager Tenant | `list + stats + insights  (read-only audit)` |
+
+**Agent Results**
+
+| Agent | Time | Tool Calls |
+| :--- | :---: | :--- |
+| ✓ Frontend Agent | 18.4s | `write×3` |
+| ✓ Performance Agent | 21.3s | `recall×1  write×3` |
+| ✓ SEO Agent | 33.1s | `recall×1  write×2` |
+| ✓ Code Review Agent | 34.0s | `recall×3  insights×1  write×1` |
+| ✓ Manager Tenant | 40.7s | `stats×1  list×1  insights×2` |
+
+**Verdicts**
+
+| | |
+| :--- | :--- |
+| Code Review Verdict | `✅ LGTM` or `🚫 BLOCK` — depends on model |
+| Pipeline Health | `✅ HEALTHY`, `⚠️ WARNINGS`, or `🚫 CRITICAL` — depends on model |
+| Data Isolation | `✅ VERIFIED` or `⚠️ UNCONFIRMED` — depends on Manager agent trust level |
+
+```
+▸ View memories : https://memclaw.net/prism
+```
+
+> **Note on verdict reproducibility:** `Code Review Verdict` and `Pipeline Health` are emitted by the LLM and are model-dependent. Different models (or the same model on different runs) may produce `LGTM` or `BLOCK` depending on how they interpret recalled memories and any detected contradictions. A `BLOCK` verdict is not a pipeline failure; it means the model found a real or apparent inconsistency (e.g. SEO inline JSON-LD read as conflicting with the Performance "no external JS" rule). Review the agent's `final_text` for its cited reasoning.
 
 ### Viewing memories in Prism
 
@@ -455,7 +422,7 @@ In Prism you can:
 
 ## Creating a New Fleet
 
-A "fleet" is a named namespace (`fleet_id`) that scopes all memories written by a group of agents. You don't need to register it anywhere — set the name in `.env` and memories are automatically isolated to that namespace.
+A "fleet" is a named namespace (`fleet_id`) that scopes all memories written by a group of agents. You don't need to register it anywhere; set the name in `.env` and memories are automatically isolated to that namespace.
 
 ### 1. Pick a fleet name
 
@@ -482,8 +449,8 @@ In `pipeline/config.py`, add a constant for your agent ID. In `pipeline/run_pipe
 
 ```python
 PIPELINE_STEPS = [
-    ("Frontend Agent",   agent_frontend,  "recall:  write:HTML5/CSS decisions"),
-    ("My New Agent",     agent_myagent,   "recall:all → write:my decisions"),   # ← add here
+    ("Frontend Agent",   agent_frontend,  "recall: none  →  write: HTML5/CSS decisions"),
+    ("My New Agent",     agent_myagent,   "recall: all  →  write: my decisions"),   # ← add here
     ...
 ]
 ```
@@ -527,7 +494,7 @@ Open a new Claude Code session and ask it to recall memories from your fleet. Cl
 
 ### MCP Inspector
 
-The official MCP debugging tool — browser UI, no code required.
+The official MCP debugging tool; browser UI, no code required.
 
 ```bash
 npx @modelcontextprotocol/inspector
@@ -548,14 +515,14 @@ Opens at `http://localhost:5173`. Set transport to HTTP, URL to `https://memclaw
 | LLM gateway 429 rate limit | Provider quota exceeded | Pipeline retries automatically (4 attempts, 20–80s backoff). Set `LLM_GATEWAY_MAX_TOKENS=2048` to reduce per-request size |
 | Inline comment breaks `.env` value | Shell comments inside env values | `LLM_GATEWAY_MODEL=my-model` — no trailing `# comments` on the same line |
 | Recall returns memories from a different run | `MEMCLAW_FLEET_ID` typo (e.g. `piepline` vs `pipeline`) | Recall queries by tenant first; a typo'd `fleet_id` still returns results but mixes namespaces. Standardise one value in `.env` and keep it consistent across all runs |
-| Manager reads return 403 / `Data Isolation: ⚠️ UNCONFIRMED` | Agent `trust_level` is 1 — `memclaw_stats`, `memclaw_list`, and `memclaw_insights` require trust ≥ 2 | Elevate trust via the admin API: `curl -X PATCH "https://memclaw.net/api/agents/manager-tenant/trust?tenant_id=<your-tenant-id>" -H "X-API-Key: $MEMCLAW_API_KEY" -d '{"trust_level": 2}'`. Do the same for `code-review-agent`. Only needs to be done once per tenant. |
-| `memclaw_insights` returns 403 for Code Review | Agent `trust_level` is 1 | Same fix as above — elevate `code-review-agent` trust to 2 via the admin API |
+| Manager reads return 403 / `Data Isolation: ⚠️ UNCONFIRMED` | Agent `trust_level` is 1; `memclaw_stats`, `memclaw_list`, and `memclaw_insights` require trust ≥ 2 | Elevate trust via the admin API: `curl -X PATCH "https://memclaw.net/api/agents/manager-tenant/trust?tenant_id=<your-tenant-id>" -H "X-API-Key: $MEMCLAW_API_KEY" -d '{"trust_level": 2}'`. Do the same for `code-review-agent`. Only needs to be done once per tenant. |
+| `memclaw_insights` returns 403 for Code Review | Agent `trust_level` is 1 | Same fix as above; elevate `code-review-agent` trust to 2 via the admin API |
 
 ---
 
 ## Using MemClaw with Other Agent Frameworks
 
-This repo is a plain-Python reference implementation — no framework dependency required. The MemClaw MCP server works with any framework that can call an OpenAI-compatible tool or an MCP endpoint.
+This repo is a plain-Python reference implementation; no framework dependency required. The MemClaw MCP server works with any framework that can call an OpenAI-compatible tool or an MCP endpoint.
 
 ### CrewAI
 
@@ -576,7 +543,7 @@ def write(content: str, importance: float = 0.85) -> str:
     return str(mcp.call_tool("memclaw_write", {"content": content, "importance": importance}, agent_id="my-crew-agent"))
 ```
 
-Assign `tools=[recall, write]` to agents that need fleet memory. The Manager audit agent gets `tools=[recall]` only — matching the read-only isolation this repo enforces.
+Assign `tools=[recall, write]` to agents that need fleet memory. The Manager audit agent gets `tools=[recall]` only; matching the read-only isolation this repo enforces.
 
 ### LangGraph / LangChain
 
@@ -593,7 +560,7 @@ recall_tool = StructuredTool.from_function(
 )
 ```
 
-Bind the tool to your `ChatOpenAI` model with `llm.bind_tools([recall_tool, write_tool])` — the rest of the agentic loop (tool-call → execute → feed back) works identically to `agent_base.py`.
+Bind the tool to your `ChatOpenAI` model with `llm.bind_tools([recall_tool, write_tool])`; the rest of the agentic loop (tool-call → execute → feed back) works identically to `agent_base.py`.
 
 ### AutoGen / AG2
 
@@ -614,7 +581,7 @@ def memclaw_recall(query: str) -> str:
 
 Any orchestrator that can make HTTP POST requests can call MemClaw directly without this Python client. Set `MEMCLAW_TRANSPORT=rest` in `.env` to use the REST fallback path in `mcp_client.py`, or POST to `https://memclaw.net/api/v1/recall` and `/memories` directly with `X-API-Key` authentication.
 
-The MCP server (`https://memclaw.net/mcp`) also works with any MCP-compatible runtime — register it as an MCP tool server and each tool schema is discovered automatically at session start.
+The MCP server (`https://memclaw.net/mcp`) also works with any MCP-compatible runtime; register it as an MCP tool server and each tool schema is discovered automatically at session start.
 
 ---
 
@@ -630,7 +597,7 @@ Contributions welcome. Useful directions:
 ### Development setup
 
 ```bash
-git clone https://github.com/Infrasity-Labs/memclaw-build-fleet.git
+git clone https://github.com/caura-ai/memclaw-build-fleet.git
 cd memclaw-build-fleet
 python -m venv .venv && source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
 pip install -r pipeline/requirements.txt
@@ -669,6 +636,6 @@ python pipeline/run_pipeline.py --dry-run
 
 ## License
 
-[MIT LICENSE](LICENSE)
+[LICENSE](LICENSE)
 
 MemClaw platform is separately licensed. See [memclaw.net](https://memclaw.net) for terms.
